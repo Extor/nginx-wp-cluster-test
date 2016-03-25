@@ -20,10 +20,10 @@ You can change all settings in:
 - vars/all.yml
 
 ## Usage
-Clone this repo, run vagrant:
-`$ git clone `  
-`$ vagrant up`
-`$ firefox localhost:8037`
+Clone this repo, run vagrant:  
+`$ git clone https://github.com/Extor/nginx-wp-cluster-test.git `  
+`$ cd nginx-wp-cluster-test && vagrant up`  
+`$ firefox localhost:8037`  
 
 Please start master-slave replication manually.
 
