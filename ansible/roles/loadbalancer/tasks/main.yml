@@ -1,0 +1,11 @@
+---
+# state for loadbalancer
+- name: Turn selinux in permissive mode
+  selinux: policy=targeted state=permissive
+- name: install haproxy
+  yum: name=haproxy state=installed
+- name: configure haproxy
+  template: src=haproxy.j2 dest=/etc/haproxy/haproxy.cfg mode=644 owner=root group=root
+  notify: reload haproxy
+- name: start haproxy
+  service: name=haproxy state=started enabled=yes

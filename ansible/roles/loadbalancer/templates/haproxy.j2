@@ -1,0 +1,63 @@
+#---------------------------------------------------------------------
+# Global settings
+#---------------------------------------------------------------------
+global
+    log         127.0.0.1 local2
+
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     4000
+    user        haproxy
+    group       haproxy
+    daemon
+
+    # turn on stats unix socket
+    stats socket /var/lib/haproxy/stats
+
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+    option http-server-close
+    option forwardfor       except 127.0.0.0/8
+    option                  redispatch
+    retries                 3
+    timeout http-request    10s
+    timeout queue           1m
+    timeout connect         10s
+    timeout client          1m
+    timeout server          1m
+    timeout http-keep-alive 10s
+    timeout check           10s
+    maxconn                 3000
+
+frontend wp
+    bind *:80
+    mode http
+    default_backend apps
+
+backend apps
+    balance leastconn
+    {% for host in appservers %}
+    server  web{{ loop.index }} {{ host }}:80 check inter 1000 rise 2 fall 3
+    {% endfor %}
+
+# mysql
+listen mysql-cluster
+    bind 0.0.0.0:3306
+    mode tcp
+    option mysql-check user haproxy
+    balance roundrobin
+    {% for key, value in database_servers.iteritems() %}
+    server {{ key }} {{ value }}:3306 {% if key == "slave" %} backup {% endif %} check weight 1 inter 1000 rise 2 fall 3
+    {% endfor %}
+
+# Statistic
+listen stats 127.0.0.1:9000
+  mode http
+  stats enable
+  stats uri /
+  #stats auth admin:Password2!
+  stats refresh 5s
+  stats hide-version

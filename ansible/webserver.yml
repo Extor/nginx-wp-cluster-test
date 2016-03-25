@@ -1,0 +1,10 @@
+---
+# site.yml
+- name: state for webserver nodes
+  hosts: all
+  sudo: yes
+  roles:
+    - default
+    - webserver
+  vars_files:
+    - vars/all.yml

@@ -1,0 +1,42 @@
+- name: Install packages for WP app
+  yum: name={{item}} state=installed
+  with_items:
+    - epel-release
+    - nginx
+    - php
+    - php-mysqlnd
+    - php-fpm
+    - libsemanage-python
+
+# nginx section
+- name: create nginx default config
+  copy: src=nginx.conf dest=/etc/nginx/nginx.conf mode=644 owner=root group=root
+  notify: restart nginx
+- name: create nginx config for WP
+  copy: src=wp.conf dest=/etc/nginx/conf.d/wp.conf mode=644 owner=root group=root
+  notify: restart nginx
+- name: start nginx
+  service: name=nginx state=started enabled=yes
+# WP section
+- name: create WP dir
+  file: path=/var/www state=directory owner=apache group=apache mode=755
+- stat: path=/var/www/wordpress
+  register: wp_dir
+- stat: path=/var/www/wordpress/wp-config.php
+  register: wp_config
+- name: get WP
+  get_url: url=https://wordpress.org/latest.tar.gz dest=/var/www/wordpress-latest.tar.gz
+  when: wp_dir.stat.exists == False
+- name: extract WP files
+  command: chdir=/var/www/ /bin/tar -xzf wordpress-latest.tar.gz
+  when: wp_dir.stat.exists == False
+- name: Prepare WP config
+  template: src=wp-config.php.j2 dest=/var/www/wordpress/wp-config.php
+  when: wp_config.stat.exists == False
+- name: set SEbool for mysql conect
+  seboolean: name=httpd_can_network_connect_db state=yes persistent=yes
+- name: Set permissions to wordpress dir
+  file: path=/var/www/wordpress state=directory recurse=yes owner=apache group=apache
+# php-fpm
+- name: start php-fpm
+  service: name=php-fpm state=started enabled=yes

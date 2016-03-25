@@ -1,0 +1,37 @@
+---
+# state for database
+- name: install MySQL-python
+  yum: name=MySQL-python
+- name: Add Percona repo
+  yum: name=http://www.percona.com/downloads/percona-release/redhat/0.1-3/percona-release-0.1-3.noarch.rpm state=present
+- name: Install Percona Server
+  yum: name=Percona-Server-server-55 state=installed
+- name: Create binlog dir for mysql
+  file: path=/var/log/mysql state=directory owner=mysql group=mysql mode=755
+- name: Start Percona server
+  service: name=mysql state=started enabled=yes
+- name: Create DB for WP
+  mysql_db: name={{ db_name }} state=present
+- name: Create user for WP
+  mysql_user: name={{ db_user }} password={{ db_pwd }} priv={{ db_name }}.*:ALL host='{{ loadbalancer_ip }}' state=present
+- name: Create user for haproxy
+  mysql_user: name={{ haproxy_db_user }} password='' host='{{ loadbalancer_ip }}' state=present
+- name: Create user for replication for Master
+  mysql_user: name={{ repl_db_user }} password='{{ repl_db_pwd }}' host='{{ database_servers["slave"] }}' state=present
+  when: "'{{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}' == '{{ database_servers['master'] }}'"
+- name: Create user for replication for Slave
+  mysql_user: name={{ repl_db_user }} password='{{ repl_db_pwd }}' host='{{ database_servers["master"] }}' state=present
+  when: "'{{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}' == '{{ database_servers['slave'] }}'"
+- name: Configure mysql for replication
+  template: src=my.cnf.j2 dest=/etc/my.cnf mode=644 owner=root group=root
+  notify: restart mysqld
+# if secure installation
+- name: Set Percona root password
+  mysql_user: name=root password={{ db_root_passwd }} state=present
+  when: db_is_secure_install == true
+- name: create ~/.my.conf
+  template: src=dot-my.cnf.j2 dest=/root/.my.cnf mode=400 owner=root group=root
+  when: db_is_secure_install == true
+- name: remove Percona test database
+  mysql_db: name=test state=absent
+  when: db_is_secure_install == true

@@ -1,0 +1,28 @@
+# webservers ip - need for haproxy config
+appservers:
+  - 192.168.10.5
+  - 192.168.10.6
+database_servers:
+  master: 192.168.10.3
+  slave: 192.168.10.4
+# load balancer info. Used for incoming and outgoing connections
+loadbalancer_ip: 192.168.10.2
+# HAProxy
+haproxy_db_user: haproxy
+haproxy_db_pwd: haproxypwd
+# replication
+repl_db_user: replication
+repl_db_pwd: replicationpwd
+# WP database settings
+db_name: wordpress
+db_user: wordpress
+db_pwd: i23GmpPKjZwm
+# these options use for preinstallation WP
+wp_is_preinstall: true
+wp_title: "My cool blog"
+wp_username: "admin"
+wp_password: "adminpwd"
+wp_email: "admin@example.com"
+# these options use if db_is_secure_install set to true
+db_is_secure_install: true
+db_root_passwd: 9ad-nC_wkQVu

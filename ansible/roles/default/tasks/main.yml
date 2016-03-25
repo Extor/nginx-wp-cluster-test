@@ -1,0 +1,4 @@
+---
+# state for all nodes
+- name: Update /etc/hosts file
+  template: src=hosts.j2 dest=/etc/hosts

@@ -1,0 +1,10 @@
+---
+# site.yml
+- name: state for database nodes
+  hosts: all
+  sudo: yes
+  roles:
+    - default
+    - database
+  vars_files:
+    - vars/all.yml
