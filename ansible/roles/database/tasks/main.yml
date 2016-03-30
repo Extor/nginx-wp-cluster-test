@@ -8,26 +8,38 @@
   yum: name=Percona-Server-server-55 state=installed
 - name: Create binlog dir for mysql
   file: path=/var/log/mysql state=directory owner=mysql group=mysql mode=755
+- name: Configure mysql
+  template: src=my.cnf.j2 dest=/etc/my.cnf mode=644 owner=root group=root
+  notify: restart mysqld
 - name: Start Percona server
   service: name=mysql state=started enabled=yes
+# config replication
+- name: Get slave status
+  mysql_replication: mode=getslave
+  register: slavestatus
+  ignore_errors: true
+  when: "'{{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}' == '{{ database_servers['slave'] }}'"
 - name: Create DB for WP
   mysql_db: name={{ db_name }} state=present
 - name: Create user for WP
-  mysql_user: name={{ db_user }} password={{ db_pwd }} priv={{ db_name }}.*:ALL host='{{ loadbalancer_ip }}' state=present
+  mysql_user: name={{ db_user }} password="{{ db_pwd }}" priv={{ db_name }}.*:ALL host='{{ loadbalancer_ip }}' state=present
 - name: Create user for haproxy
   mysql_user: name={{ haproxy_db_user }} password='' host='{{ loadbalancer_ip }}' state=present
 - name: Create user for replication for Master
-  mysql_user: name={{ repl_db_user }} password='{{ repl_db_pwd }}' host='{{ database_servers["slave"] }}' state=present
+  mysql_user: name={{ repl_db_user }} password="{{ repl_db_pwd }}" priv=*.*:"REPLICATION SLAVE" host='{{ database_servers["slave"] }}' state=present
   when: "'{{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}' == '{{ database_servers['master'] }}'"
 - name: Create user for replication for Slave
-  mysql_user: name={{ repl_db_user }} password='{{ repl_db_pwd }}' host='{{ database_servers["master"] }}' state=present
+  mysql_user: name={{ repl_db_user }} password="{{ repl_db_pwd }}" priv=*.*:"REPLICATION SLAVE" host='{{ database_servers["master"] }}' state=present
   when: "'{{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}' == '{{ database_servers['slave'] }}'"
-- name: Configure mysql for replication
-  template: src=my.cnf.j2 dest=/etc/my.cnf mode=644 owner=root group=root
-  notify: restart mysqld
+- name: Config replication for Slave
+  mysql_replication: mode=changemaster master_host={{ database_servers['master'] }} master_log_file=mysql-bin.000001 master_log_pos=1262 master_user={{ repl_db_user }} master_password="{{ repl_db_pwd }}"
+  when: "'{{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}' == '{{ database_servers['slave'] }}' and (slavestatus|failed or slavestatus.Slave_SQL_Running != 'Yes')"
+- name: Start slave on Slave
+  mysql_replication: mode=startslave
+  when: "'{{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}' == '{{ database_servers['slave'] }}'"
 # if secure installation
 - name: Set Percona root password
-  mysql_user: name=root password={{ db_root_passwd }} state=present
+  mysql_user: name=root password="{{ lookup ('password','~/secret/mysqlrootpwd') }}" state=present
   when: db_is_secure_install == true
 - name: create ~/.my.conf
   template: src=dot-my.cnf.j2 dest=/root/.my.cnf mode=400 owner=root group=root

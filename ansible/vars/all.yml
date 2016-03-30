@@ -9,7 +9,6 @@ database_servers:
 loadbalancer_ip: 192.168.10.2
 # HAProxy
 haproxy_db_user: haproxy
-haproxy_db_pwd: haproxypwd
 # replication
 repl_db_user: replication
 repl_db_pwd: replicationpwd
@@ -25,4 +24,3 @@ wp_password: "adminpwd"
 wp_email: "admin@example.com"
 # these options use if db_is_secure_install set to true
 db_is_secure_install: true
-db_root_passwd: 9ad-nC_wkQVu

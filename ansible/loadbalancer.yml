@@ -2,7 +2,9 @@
 # site.yml
 - name: state for loadbalancer nodes
   hosts: all
-  sudo: yes
+  become: yes
+  become_user: root
+  become_method: sudo
   roles:
     - default
     - loadbalancer

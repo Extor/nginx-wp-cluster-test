@@ -30,4 +30,3 @@ Please start master-slave replication manually.
 ## ToDo
 1. Use one file for create VM and Ansible configuration.
 2. More setting for nginx, perconadb and haproxy in setting file
-3. Add master-slave replication via Ansible

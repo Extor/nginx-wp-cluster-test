@@ -28,7 +28,7 @@
   get_url: url=https://wordpress.org/latest.tar.gz dest=/var/www/wordpress-latest.tar.gz
   when: wp_dir.stat.exists == False
 - name: extract WP files
-  command: chdir=/var/www/ /bin/tar -xzf wordpress-latest.tar.gz
+  unarchive: src=/var/www/wordpress-latest.tar.gz dest=/var/www/ copy=no
   when: wp_dir.stat.exists == False
 - name: Prepare WP config
   template: src=wp-config.php.j2 dest=/var/www/wordpress/wp-config.php
