@@ -1,0 +1,26 @@
+settings {
+        logident        = "lsyncd",
+        logfacility     = "user",
+        logfile         = "/var/log/lsyncd.log",
+        statusFile      = "/var/log/lsyncd_status.log",
+        statusInterval  = 1
+}
+
+
+{% for appserver in appservers %}
+{% if hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] != appserver %}
+sync{
+        default.rsync,
+        source="/var/www/wordpress/",
+        target="{{ appserver }}:/var/www/wordpress/",
+        rsync     = {
+                archive  = true,
+                compress = true,
+                perms = true,
+                owner = true,
+                rsh = "/usr/bin/ssh -o StrictHostKeyChecking=no"
+        },
+        delay = 1,
+}
+{% endif %}
+{% endfor %}

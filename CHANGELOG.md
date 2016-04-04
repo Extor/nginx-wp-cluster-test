@@ -5,3 +5,7 @@
 - clear configs from comments and unused directives
 - fix extract method
 - use `become` instead `sudo` in yml
+
+# 1.0.2
+
+- add replication for file system

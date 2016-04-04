@@ -40,3 +40,18 @@
 # php-fpm
 - name: start php-fpm
   service: name=php-fpm state=started enabled=yes
+# file replication on lsyncd
+- name: install lsyncd
+  yum: name=lsyncd state=installed
+- name: config lsyncd
+  template: src=lsyncd.conf.j2 dest=/etc/lsyncd.conf
+- name: prepare dir for ssh root keys
+  file: path=/root/.ssh state=directory mode=700
+- name: create auth keys for root user
+  copy: src=/home/vagrant/ansible/vars/id_rsa dest=/root/.ssh/id_rsa owner=root group=root mode=400
+- name: create authorized file for root user
+  authorized_key: user=root key="{{ lookup('file', '/home/vagrant/ansible/vars/id_rsa.pub') }}"
+- name: set fs.inotify.max_user_watches
+  sysctl: name=fs.inotify.max_user_watches value=16777216 state=present
+- name: start lsyncd service
+  service: name=lsyncd state=started enabled=yes

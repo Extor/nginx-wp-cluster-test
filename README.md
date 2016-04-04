@@ -20,13 +20,16 @@ You can change all settings in:
 - vars/all.yml
 
 ## Usage
-Clone this repo, run vagrant:  
+Clone this repo, change keys run vagrant:  
 `$ git clone https://github.com/Extor/nginx-wp-cluster-test.git `  
-`$ cd nginx-wp-cluster-test && vagrant up`  
+`$ cd nginx-wp-cluster-test`  
+`$ ssh-keygen -t rsa -N "" -q -f ./ansible/vars/id_rsa`  
+`$ vagrant up`  
 `$ firefox localhost:8037`  
 
-Please start master-slave replication manually.
+## Known bugs
+1. First app node don't start lsyncd. Before start lsyncd on first application node needed wait to start second application node
 
 ## ToDo
 1. Use one file for create VM and Ansible configuration.
-2. More setting for nginx, perconadb and haproxy in setting file
+2. Fix bug 1
